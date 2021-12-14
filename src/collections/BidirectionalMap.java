@@ -75,4 +75,8 @@ public class BidirectionalMap {
         //Remove the slang from the old definition
         oppositeMap.get(oldDefinition).remove(oldDefinition);
     }
+
+    public void load()
+    {}
+
 }

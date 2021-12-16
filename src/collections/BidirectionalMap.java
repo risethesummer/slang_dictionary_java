@@ -77,6 +77,8 @@ public class BidirectionalMap {
     }
 
     public void load()
-    {}
+    {
+        int a =5 ;
+    }
 
 }

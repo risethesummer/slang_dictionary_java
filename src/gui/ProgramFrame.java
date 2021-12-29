@@ -1,7 +1,15 @@
 package gui;
 
+import collections.SlangWord;
+import gui.modification.AddSlangWordPanel;
+import gui.modification.UpdateDeleteSlangWordPanel;
+import gui.search.GetHistoryPanel;
+import gui.search.SearchPanel;
+import gui.settings.SettingPanel;
+
 import javax.swing.*;
 import java.awt.*;
+import java.util.function.*;
 
 /**
  * gui
@@ -11,27 +19,26 @@ import java.awt.*;
  */
 public class ProgramFrame extends JFrame {
 
-    public static void main(String[] args)
-    {
-        new ProgramFrame();
-    }
-    public ProgramFrame()
-    {
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        MultipleButtonsPanel selectFunctionsPanel = new MultipleButtonsPanel(new ButtonTextCallback[] {
-                new ButtonTextCallback("Search definition by slang word", null),
-                new ButtonTextCallback("Search slang words by definition", null),
-                new ButtonTextCallback("Search history", null),
-                new ButtonTextCallback("Add new slang word", null),
-                new ButtonTextCallback("Edit/delete a slang word", null),
-                new ButtonTextCallback("Reset the original slang word", null),
-                new ButtonTextCallback("Random a slang word", null),
-                new ButtonTextCallback("Puzzle", null),
-                new ButtonTextCallback("Puzzle", null)
-        });
+    private final String SEARCH_DEFINITION = "Search definition by slang word";
+    private final String SEARCH_SLANG = "Search slang words by definition";
+    private final String GET_HISTORY = "Get search history";
+    private final String ADD_SLANG = "Add new slang word";
+    private final String UPDATE_SLANG = "Update/Delete a slang word";
+    private final String SETTING = "Settings";
 
-        mainPanel.add(selectFunctionsPanel, BorderLayout.LINE_START);
-
+    public ProgramFrame(Function<String, String> onSearchDefinition, Function<String, String> onSearchSlang,
+                        Supplier<java.util.List<String>> onGetHistory, BiPredicate<SlangWord, BooleanSupplier> onAddSlangWord,
+                        Consumer<SlangWord> onUpdate, Consumer<String> onDelete, Runnable onReset, Runnable onSave)
+    {
+        JTabbedPane mainPanel = new JTabbedPane();
+        mainPanel.setFont(new Font( "Arial", Font.BOLD, 15 ));
+        mainPanel.setTabPlacement(JTabbedPane.LEFT);
+        mainPanel.add(SEARCH_DEFINITION, new SearchPanel(SEARCH_DEFINITION, "Slang", onSearchDefinition));
+        mainPanel.add(SEARCH_SLANG, new SearchPanel(SEARCH_SLANG, "Definition", onSearchSlang));
+        mainPanel.add(GET_HISTORY, new GetHistoryPanel(GET_HISTORY, onGetHistory));
+        mainPanel.add(ADD_SLANG, new AddSlangWordPanel(ADD_SLANG, onSearchDefinition, onAddSlangWord));
+        mainPanel.add(UPDATE_SLANG, new UpdateDeleteSlangWordPanel(UPDATE_SLANG, onSearchDefinition, onUpdate, onDelete));
+        mainPanel.add(SETTING, new SettingPanel(SETTING, onReset, onSave));
         this.getContentPane().add(mainPanel);
         setDefaultLookAndFeelDecorated(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);

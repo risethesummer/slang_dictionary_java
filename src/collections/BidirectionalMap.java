@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 /**
  * collections
@@ -20,33 +21,32 @@ public class BidirectionalMap {
 
     private HashMap<String, String> slangMap;
     private HashMap<String, List<String>> definitionMap;
-    private BooleanSupplier duplicatedCallback;
 
     /**
      *
      * @param initialCapacity
      */
-    public BidirectionalMap(int initialCapacity, BooleanSupplier duplicatedCallback)
+    public BidirectionalMap(int initialCapacity)
     {
         slangMap = new HashMap<>(initialCapacity);
         definitionMap = new HashMap<>(initialCapacity);
-        this.duplicatedCallback = duplicatedCallback;
     }
 
-    public void add(String slang, String definition)
+    public boolean add(SlangWord slangWord, BooleanSupplier duplicatedCallback)
     {
         //If the main map contains the slang
         //-> callback to ask overwrite the slang
-        if (slangMap.containsKey(slang))
+        if (slangMap.containsKey(slangWord.word))
         {
             //If the user approves to overwrite
             //->update the slang
-            if (duplicatedCallback.getAsBoolean())
-                update(slang, definition);
-            return;
+            if (!duplicatedCallback.getAsBoolean())
+                return false;
+            update(slangWord);
         }
-
-        addNotCheck(slang, definition);
+        else
+            addNotCheck(slangWord.word, slangWord.definition);
+        return true;
     }
 
     public void addNotCheck(String slang, String definition)
@@ -67,18 +67,32 @@ public class BidirectionalMap {
     }
 
 
-    public void update(String slang, String newDefinition)
+    public void update(SlangWord slangWord)
     {
-        String oldDefinition = slangMap.get(slang);
+        String oldDefinition = slangMap.get(slangWord.word);
         //Add to replace the old definition
-        slangMap.put(slang, newDefinition);
+        slangMap.put(slangWord.word, slangWord.definition);
         //Add new slang to the new definition
-        definitionMap.get(newDefinition).add(slang);
+        definitionMap.get(slangWord.definition).add(slangWord.word);
         //Remove the slang from the old definition
         definitionMap.get(oldDefinition).remove(oldDefinition);
     }
 
-    public void loadStructredFile(String slangPath, String defPath)
+    public void delete(String slangWord)
+    {
+        String definition = slangMap.get(slangWord);
+        //Remove from the slang list
+        slangMap.remove(slangWord);
+        List<String> definitionList = definitionMap.get(definition);
+        //Just remains 1 word -> delete the definition list from the definition map
+        if (definitionList.size() == 1)
+            definitionMap.remove(definition);
+        else
+            //Remove the slang from the definition list
+            definitionList.remove(slangWord);
+    }
+
+    public void loadStructuredFile(String slangPath, String defPath)
     {
         try
         {
@@ -87,8 +101,14 @@ public class BidirectionalMap {
             while (line != null)
             {
                 line = reader.readLine();
-                String[] parts = line.split("`");
-                slangMap.put(parts[0], parts[1]);
+                try {
+                    String[] parts = line.split("`");
+                    slangMap.put(parts[0], parts[1]);
+                }
+                catch (Exception e)
+                {
+                    continue;
+                }
             }
             reader.close();
 
@@ -99,12 +119,18 @@ public class BidirectionalMap {
             while (line != null)
             {
                 line = reader.readLine();
-                String[] parts = line.split("`");
-
-                List<String> words = new ArrayList<>(parts.length - 1);
-                definitionMap.put(parts[0], words);
-                for (int i = 1; i < parts.length; i++)
-                    words.add(parts[i]);
+                try
+                {
+                    String[] parts = line.split("`");
+                    List<String> words = new ArrayList<>(parts.length - 1);
+                    definitionMap.put(parts[0], words);
+                    for (int i = 1; i < parts.length; i++)
+                        words.add(parts[i]);
+                }
+                catch (Exception e)
+                {
+                    continue;
+                }
             }
         }
         catch (Exception e)
@@ -166,13 +192,43 @@ public class BidirectionalMap {
             while (line != null)
             {
                 line = reader.readLine();
-                String[] parts = line.split("`");
-                addNotCheck(parts[0], parts[1]);
+                try
+                {
+                    String[] parts = line.split("`");
+                    addNotCheck(parts[0], parts[1]);
+                }
+                catch (Exception e)
+                {
+                    continue;
+                }
             }
         }
         catch (Exception e)
         {
             e.printStackTrace();
+        }
+    }
+
+    public HashMap<String, String> getSlangMap() {
+        return slangMap;
+    }
+
+    public HashMap<String, List<String>> getDefinitionMap() {
+        return definitionMap;
+    }
+
+    public String getSlangWords(String definition)
+    {
+        try
+        {
+            String result = "";
+            for (String slang : definitionMap.get(definition))
+                result += slang + '\n';
+            return result;
+        }
+        catch (Exception e)
+        {
+            return "";
         }
     }
 }

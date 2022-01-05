@@ -11,8 +11,8 @@ import java.util.function.BooleanSupplier;
  */
 public class BidirectionalMap {
 
-    private HashMap<String, String> slangMap;
-    private HashMap<String, List<String>> definitionMap;
+    private TreeMap<String, String> slangMap;
+    private TreeMap<String, List<String>> definitionMap;
 
     /**
      * Create a new map with initial capacity to increase performance when the size increases
@@ -21,9 +21,9 @@ public class BidirectionalMap {
     public BidirectionalMap(int initialCapacity)
     {
         //Slang -> definition
-        slangMap = new HashMap<>(initialCapacity);
+        slangMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         //Definition -> list of slang words
-        definitionMap = new HashMap<>(initialCapacity);
+        definitionMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     }
 
     /**
@@ -153,6 +153,7 @@ public class BidirectionalMap {
             definitionMap.put(slangWord.definition, slangWords);
         }
         slangWords.add(slangWord.word);
+        Object m = definitionMap.get(oldDefinition);
         //Remove the slang from the old definition
         definitionMap.get(oldDefinition).remove(oldDefinition);
     }
@@ -318,7 +319,7 @@ public class BidirectionalMap {
      * Get the slang map (slang word -> definition)
      * @return the slang map
      */
-    public HashMap<String, String> getSlangMap() {
+    public Map<String, String> getSlangMap() {
         return slangMap;
     }
 
@@ -326,7 +327,7 @@ public class BidirectionalMap {
      * Get the definition map (definition -> slang word)
      * @return the definition map
      */
-    public HashMap<String, List<String>> getDefinitionMap() {
+    public Map<String, List<String>> getDefinitionMap() {
         return definitionMap;
     }
 

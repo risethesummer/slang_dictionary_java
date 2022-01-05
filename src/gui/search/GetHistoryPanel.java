@@ -1,5 +1,6 @@
 package gui.search;
 
+import collections.SearchedSlangWord;
 import gui.FunctionPanel;
 
 import javax.swing.*;
@@ -11,33 +12,64 @@ import java.util.function.Supplier;
  * gui
  * Created by NhatLinh - 19127652
  * Date 12/23/2021 - 3:57 PM
- * Description: ...
+ * Description: A panel for getting search history
  */
 public class GetHistoryPanel extends FunctionPanel {
 
-    private JList historyList;
+    /**
+     * The list showing search slang word history
+     */
+    private final JList searchSlangHistoryList;
+    /**
+     * The list showing search definition history
+     */
+    private final JList searchDefinitionHistoryList;
 
-    public GetHistoryPanel(String title, Supplier<List<String>> onViewHistory)
+    /**
+     * Construct the history panel with full information
+     * @param title the title of the function
+     * @param onViewDefinitionHistory the callback used to get the history in searching definition function
+     * @param onViewSlangHistory the callback used to get the history in searching slang words function
+     * @param loadedDefinitionHistory the history of searching definition stored in the system
+     * @param loadedSlangHistory the history of searching slang words stored in the system
+     */
+    public GetHistoryPanel(String title, Supplier<List<String>> onViewDefinitionHistory,
+                           Supplier<List<String>> onViewSlangHistory, List<SearchedSlangWord> loadedDefinitionHistory,
+                           List<SearchedSlangWord> loadedSlangHistory)
     {
         super(title);
         mainPanel.setLayout(new BorderLayout());
+        JTabbedPane mainTab = new JTabbedPane();
 
         JButton loadButton = new JButton("Load");
 
-        historyList = new JList();
+        searchDefinitionHistoryList = new JList();
+        searchDefinitionHistoryList.setListData(loadedDefinitionHistory.toArray());
+
+        searchSlangHistoryList = new JList();
+        searchSlangHistoryList.setListData(loadedSlangHistory.toArray());
 
         loadButton.addActionListener(e -> {
-            List<String> history = onViewHistory.get();
-            if (history != null)
+            List<String> defHistory = onViewDefinitionHistory.get();
+            if (defHistory != null)
             {
-                Object[] object = history.toArray();
                 SwingUtilities.invokeLater(() -> {
-                    historyList.setListData(object);
+                    searchDefinitionHistoryList.setListData(defHistory.toArray());
+                });
+            }
+
+            List<String> slangHistory = onViewSlangHistory.get();
+            if (slangHistory != null)
+            {
+                SwingUtilities.invokeLater(() -> {
+                    searchSlangHistoryList.setListData(slangHistory.toArray());
                 });
             }
         });
 
+        mainTab.add("Search definition history", searchDefinitionHistoryList);
+        mainTab.add("Search slang words history", searchSlangHistoryList);
         mainPanel.add(loadButton, BorderLayout.PAGE_START);
-        mainPanel.add(historyList, BorderLayout.CENTER);
+        mainPanel.add(mainTab, BorderLayout.CENTER);
     }
 }

@@ -1,26 +1,44 @@
 package gui.search;
-
 import gui.FunctionPanel;
 import gui.utilities.SyncDefinitionListener;
 import gui.utilities.TextWithLabel;
-
 import javax.swing.*;
-import java.awt.*;
+import javax.swing.text.JTextComponent;
 import java.util.function.Function;
 
 /**
  * gui
  * Created by NhatLinh - 19127652
  * Date 12/23/2021 - 11:26 AM
- * Description: ...
+ * Description: A panel for searching activities in the program
  */
 public class SearchPanel extends FunctionPanel {
 
-    private final TextWithLabel searchPanel;
-    private final JTextArea resultTA;
-    private final JButton searchButton;
+    /**
+     * The panel for inputting searched key word
+     */
+    protected final TextWithLabel searchPanel;
+    /**
+     * The text field showing the result
+     */
+    protected JTextComponent resultText;
+    /**
+     * The search button calling the callback
+     */
+    protected final JButton searchButton;
+    /**
+     * The callback used to get hints when user input
+     */
+    protected final Function<String, String> onSearch;
 
-    public SearchPanel(String title, String searchDisplay, Function<String, String> onSearch)
+    /**
+     * Construct a new searched panel with full information
+     * @param title the tittle of the function
+     * @param searchDisplay the text displayed on the label near the input field
+     * @param onSearch the callback used for giving hints to users when they input
+     * @param onSearchSaving the callback used for giving results to users and save the result to the system when they click the button
+     */
+    public SearchPanel(String title, String searchDisplay, Function<String, String> onSearch, Function<String, String> onSearchSaving)
     {
         super(title);
 
@@ -31,32 +49,30 @@ public class SearchPanel extends FunctionPanel {
         JLabel resultLabel = new JLabel("Result");
         resultLabel.setAlignmentX(CENTER_ALIGNMENT);
 
-        resultTA = new JTextArea();
-        JScrollPane resultScroll = new JScrollPane(resultTA);
-        resultTA.setEditable(false);
-
-        searchButton = new JButton("Search");
+        searchButton = new JButton("Save search history");
         searchButton.setAlignmentX(CENTER_ALIGNMENT);
-        searchButton.addActionListener(e->{
+        this.onSearch = onSearch;
+
+        searchButton.addActionListener(e -> {
             if (!searchPanel.getTextField().getText().isBlank())
             {
-                String result = onSearch.apply(searchPanel.getTextField().getText());
+                String result = onSearchSaving.apply(searchPanel.getTextField().getText());
                 SwingUtilities.invokeLater(() -> {
-                    resultTA.setText(result);
+                    resultText.setText(result);
                 });
             }
         });
-
-        //Add hints when inputting new text
-        searchPanel.getTextField().getDocument().addDocumentListener(new SyncDefinitionListener(searchPanel.getTextField(), resultTA, onSearch));
 
         mainPanel.add(Box.createVerticalStrut(20));
         mainPanel.add(searchPanel);
         mainPanel.add(searchButton);
         mainPanel.add(Box.createVerticalStrut(20));
         mainPanel.add(resultLabel);
-        mainPanel.add(resultScroll);
-        mainPanel.add(Box.createVerticalStrut(20));
+    }
 
+    protected void addHintWhenInputting()
+    {
+        //Add hints when inputting new text
+        searchPanel.getTextField().getDocument().addDocumentListener(new SyncDefinitionListener(searchPanel.getTextField(), resultText, onSearch));
     }
 }

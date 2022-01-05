@@ -11,9 +11,17 @@ import java.util.function.Function;
  * gui
  * Created by NhatLinh - 19127652
  * Date 12/29/2021 - 10:59 PM
- * Description: ...
+ * Description: A panel for updating or deleting the data of the system
  */
 public class UpdateDeleteSlangWordPanel extends ModifySlangWordPanel {
+
+    /**
+     * Construct a new panel with full information
+     * @param title the title for the function
+     * @param onGetDefinition the callback used to get definition when user input slang words (get hints)
+     * @param onUpdate the callback called to update the slang word (when clicking the update button)
+     * @param onDelete the callback called to delete the slang word (when clicking the delete button)
+     */
     public UpdateDeleteSlangWordPanel(String title, Function<String, String> onGetDefinition, Consumer<SlangWord> onUpdate,
                                       Consumer<String> onDelete)
     {
@@ -45,8 +53,8 @@ public class UpdateDeleteSlangWordPanel extends ModifySlangWordPanel {
             int choice = JOptionPane.showOptionDialog(this,
                     "Do you really want to delete the slang word?",
                     "Confirm deleting the slang word",
-                    JOptionPane.QUESTION_MESSAGE,
                     JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
                     null,
                     new String[]{"Yes", "No"},
                     0);

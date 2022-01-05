@@ -10,10 +10,16 @@ import java.util.function.Function;
  * gui
  * Created by NhatLinh - 19127652
  * Date 12/23/2021 - 4:40 PM
- * Description: ...
+ * Description: A panel for adding new slang word
  */
 public class AddSlangWordPanel extends ModifySlangWordPanel {
 
+    /**
+     * Construct a new panel with full information
+     * @param title the title for the function
+     * @param onGetDefinition the callback used to get definition when user input slang words (get hints)
+     * @param onAddSlang the callback called to add the slang word (when clicking the add button)
+     */
     public AddSlangWordPanel(String title, Function<String, String> onGetDefinition, BiPredicate<SlangWord, BooleanSupplier> onAddSlang)
     {
         super(title, "Insert definition", onGetDefinition);
@@ -21,7 +27,13 @@ public class AddSlangWordPanel extends ModifySlangWordPanel {
         JButton addButton = new JButton("Add new slang word");
         addButton.setAlignmentX(CENTER_ALIGNMENT);
         addButton.addActionListener(e -> {
-            SlangWord updateInformation = new SlangWord(slangPanel.getTextField().getText(), updateDefinition.getTextField().getText());
+            String insertDef = updateDefinition.getTextField().getText();
+            if (insertDef == null || insertDef.isBlank())
+            {
+                JOptionPane.showMessageDialog(this, "Can not leave the definition empty!", "The definition is empty!", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            SlangWord updateInformation = new SlangWord(slangPanel.getTextField().getText(), insertDef);
             boolean add = onAddSlang.test(updateInformation, () -> {
                 int choice = JOptionPane.showOptionDialog(this,
                         "The slang word has already existed\n" +

@@ -4,7 +4,8 @@ import collections.Question;
 import collections.SearchedSlangWord;
 import collections.SlangWord;
 import gui.modification.AddSlangWordPanel;
-import gui.modification.UpdateDeleteSlangWordPanel;
+import gui.modification.DeleteSlangWordPanel;
+import gui.modification.UpdateSlangWordPanel;
 import gui.puzzles.PuzzlePanel;
 import gui.search.*;
 import java.util.List;
@@ -41,7 +42,11 @@ public class ProgramFrame extends JFrame {
     /**
      * Update slang word function title
      */
-    private final String UPDATE_SLANG = "Update/Delete a slang word";
+    private final String UPDATE_SLANG = "Update a slang word";
+    /**
+     * Delete slang word function title
+     */
+    private final String DELETE_SLANG = "Delete a slang word";
     /**
      * Setting function title
      */
@@ -106,7 +111,8 @@ public class ProgramFrame extends JFrame {
         mainPanel.add(SEARCH_SLANG, new SearchSlangWordPanel(SEARCH_SLANG, "Definition", onSearchSlang, onSearchSlangSaving));
         mainPanel.add(GET_HISTORY, new GetHistoryPanel(GET_HISTORY, onGetSearchDefinitionHistory, onGetSearchSlangHistory, definitionLoadedHistory, slangLoadedHistory));
         mainPanel.add(ADD_SLANG, new AddSlangWordPanel(ADD_SLANG, onSearchDefinition, onAddSlangWord));
-        mainPanel.add(UPDATE_SLANG, new UpdateDeleteSlangWordPanel(UPDATE_SLANG, onSearchDefinition, onUpdate, onDelete));
+        mainPanel.add(UPDATE_SLANG, new UpdateSlangWordPanel(UPDATE_SLANG, onSearchDefinition, onUpdate));
+        mainPanel.add(DELETE_SLANG, new DeleteSlangWordPanel(DELETE_SLANG, onSearchDefinition, onDelete));
         mainPanel.add(RANDOM, new RandomSlangWordPanel(RANDOM, onRandom));
 
         JTabbedPane puzzleTab = new JTabbedPane();

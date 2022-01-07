@@ -49,7 +49,7 @@ public class RandomSlangWordPanel extends FunctionPanel {
 
         JPanel historyPanel = new JPanel(new BorderLayout());
         JLabel historyLabel = new JLabel("Random history");
-        historyLabel.setAlignmentY(LEFT_ALIGNMENT);
+        historyLabel.setAlignmentX(LEFT_ALIGNMENT);
         JList<String> historyList = new JList<>(historyListModel);
         JScrollPane scrollList = new JScrollPane(historyList);
         historyPanel.add(historyLabel, BorderLayout.PAGE_START);

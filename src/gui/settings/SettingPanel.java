@@ -40,7 +40,7 @@ public class SettingPanel extends FunctionPanel {
             }
             catch (Exception exception)
             {
-                JOptionPane.showMessageDialog(this, "Failed to reset the lsit");
+                JOptionPane.showMessageDialog(this, "Failed to reset the list");
             }
         });
         resetButton.setAlignmentX(CENTER_ALIGNMENT);

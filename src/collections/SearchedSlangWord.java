@@ -2,6 +2,7 @@ package collections;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * collections
@@ -22,7 +23,7 @@ public class SearchedSlangWord extends SlangWord implements Serializable {
      * @param definition the definition
      * @param time the searched time
      */
-    public SearchedSlangWord(String word, String definition, LocalDateTime time)
+    public SearchedSlangWord(String word, List<String> definition, LocalDateTime time)
     {
         super(word, definition);
         this.time = time;

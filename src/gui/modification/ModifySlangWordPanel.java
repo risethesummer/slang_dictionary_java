@@ -15,10 +15,6 @@ import java.util.function.Function;
 public class ModifySlangWordPanel extends FunctionPanel {
 
     /**
-     * The update data field for the slang word
-     */
-    protected final TextWithLabel updateDefinition;
-    /**
      * The field for inputting slang word
      */
     protected final TextWithLabel slangPanel = new TextWithLabel("Slang word");
@@ -30,15 +26,13 @@ public class ModifySlangWordPanel extends FunctionPanel {
     /**
      * Construct a new panel with full information
      * @param title the title for the function
-     * @param updateText the text displayed on the label near the update content field
      * @param onGetDefinition the callback used to get definition when user input slang words (get hints)
      */
-    public ModifySlangWordPanel(String title, String updateText, Function<String, String> onGetDefinition)
+    public ModifySlangWordPanel(String title, Function<String, String> onGetDefinition)
     {
         super(title);
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
 
-        updateDefinition = new TextWithLabel(updateText);
         slangPanel.getTextField().getDocument().addDocumentListener(new SyncDefinitionListener(slangPanel.getTextField(), oldDefinition.getTextField(), onGetDefinition));
         oldDefinition.getTextField().setEditable(false);
 
@@ -46,8 +40,6 @@ public class ModifySlangWordPanel extends FunctionPanel {
         mainPanel.add(slangPanel);
         mainPanel.add(Box.createVerticalStrut(20));
         mainPanel.add(oldDefinition);
-        mainPanel.add(Box.createVerticalStrut(20));
-        mainPanel.add(updateDefinition);
         mainPanel.add(Box.createVerticalStrut(20));
     }
 }

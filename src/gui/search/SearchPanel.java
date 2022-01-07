@@ -57,9 +57,7 @@ public class SearchPanel extends FunctionPanel {
             if (!searchPanel.getTextField().getText().isBlank())
             {
                 String result = onSearchSaving.apply(searchPanel.getTextField().getText());
-                SwingUtilities.invokeLater(() -> {
-                    resultText.setText(result);
-                });
+                SwingUtilities.invokeLater(() -> resultText.setText(result));
             }
         });
 

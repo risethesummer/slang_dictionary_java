@@ -2,6 +2,7 @@ package manager;
 
 import collections.BidirectionalMap;
 import collections.SearchedSlangWord;
+import collections.SlangWord;
 import gui.ProgramFrame;
 
 import java.io.*;
@@ -19,21 +20,16 @@ import java.util.function.Supplier;
  */
 public class ProgramManager {
 
-    //Initial amount for the data map
-    private final int MAX = 8000;
-
-    private final String SLANG_PATH = "slangDefault.txt";
-    private final String DEFINITION_PATH = "definitionDefault.txt";
     private final String ORIGINAL_PATH = "slang.txt";
-    private final String HISTORY_DEFINITION_PATH = "historyDef.txt";
-    private final String HISTORY_SlANG_PATH = "historySlang.txt";
+    private final String SAVE_PATH = "save.dat";
+    private final String HISTORY_DEFINITION_PATH = "historyDef.dat";
+    private final String HISTORY_SlANG_PATH = "historySlang.dat";
 
     private static ProgramManager instance;
 
-    private List<SearchedSlangWord> searchedDefinitions;
-    private List<SearchedSlangWord> searchedSlangWords;
-
-    private BidirectionalMap data = new BidirectionalMap(MAX);
+    private ArrayList<SearchedSlangWord> searchedDefinitions;
+    private ArrayList<SearchedSlangWord> searchedSlangWords;
+    private BidirectionalMap data;
 
 
     /**
@@ -49,21 +45,18 @@ public class ProgramManager {
 
     private ProgramManager()
     {
-        //If the first time loading the program -> use the original list
-        //Else, use the structured files
-        if (new File(SLANG_PATH).isFile() && new File(DEFINITION_PATH).isFile())
-            data.loadStructuredFile(SLANG_PATH, DEFINITION_PATH);
-        else
-            data.load(ORIGINAL_PATH);
-        loadHistory();
+        firstLoad();
 
         //Callbacks for gui
         //Search definition and save history callback
         Function<String, String> onSearchDefinition = (s)->{
-            String result = data.getSlangMap().get(s);
+            List<String> result = data.getSlangMap().get(s);
             if (result != null)
+            {
                 searchedDefinitions.add(new SearchedSlangWord(s, result, LocalDateTime.now()));
-            return result;
+                return SlangWord.asString(result, "|");
+            }
+            return null;
         };
 
         //Search slang word and save history callback
@@ -72,13 +65,8 @@ public class ProgramManager {
             List<String> result = data.getDefinitionMap().get(s);
             if (result != null)
             {
-                String strResult = "";
-                for (String slang : result)
-                {
-                    searchedSlangWords.add(new SearchedSlangWord(s, slang, LocalDateTime.now()));
-                    strResult += slang + '\n';
-                }
-                return strResult;
+                searchedSlangWords.add(new SearchedSlangWord(s, result, LocalDateTime.now()));
+                return SlangWord.asString(result, "\n");
             }
             return null;
         };
@@ -116,7 +104,7 @@ public class ProgramManager {
         };
 
         //Create the main frame
-        new ProgramFrame(onSearchDefinition, data.getSlangMap()::get, onSeachSlangWords, data::getSlangWords, onGetDefinitionHistory, onGetSlangHistory, searchedDefinitions, searchedSlangWords, data::add, data::update, data::delete, this::resetData, this::saveData, data::random, data::randomSlangQuestion, data::randomDefinitionQuestion);
+        new ProgramFrame(onSearchDefinition, s -> SlangWord.asString(data.getSlangMap().get(s), "|"), onSeachSlangWords, s -> SlangWord.asString(data.getDefinitionMap().get(s), "\n"), onGetDefinitionHistory, onGetSlangHistory, searchedDefinitions, searchedSlangWords, data::add, data::update, data::delete, this::resetData, this::saveData, data::random, data::randomSlangQuestion, data::randomDefinitionQuestion);
     }
 
     private void resetData()
@@ -129,20 +117,9 @@ public class ProgramManager {
     {
         try
         {
-            //Save current data
-            data.saveFile(SLANG_PATH, DEFINITION_PATH);
-
-            //Save search history
-            //Save search definition history
-            ObjectOutputStream defStream = new ObjectOutputStream(new FileOutputStream(HISTORY_DEFINITION_PATH));
-            defStream.writeObject(searchedDefinitions);
-            defStream.flush();
-            defStream.close();
-            //Save search slang word history
-            ObjectOutputStream slangStream = new ObjectOutputStream(new FileOutputStream(HISTORY_SlANG_PATH));
-            slangStream.writeObject(searchedSlangWords);
-            slangStream.flush();
-            slangStream.close();
+            saveObject(data, SAVE_PATH);
+            saveObject(searchedDefinitions, HISTORY_DEFINITION_PATH);
+            saveObject(searchedSlangWords, HISTORY_SlANG_PATH);
         }
         catch (Exception e)
         {
@@ -150,19 +127,57 @@ public class ProgramManager {
         }
     }
 
-    private void loadHistory()
+    private void firstLoad()
     {
         try
         {
-            ObjectInputStream defStream = new ObjectInputStream(new FileInputStream(HISTORY_DEFINITION_PATH));
-            searchedDefinitions = (ArrayList<SearchedSlangWord>)defStream.readObject();
-            ObjectInputStream slangStream = new ObjectInputStream(new FileInputStream(HISTORY_SlANG_PATH));
-            searchedSlangWords = (ArrayList<SearchedSlangWord>)slangStream.readObject();
+            Object map = loadObject(SAVE_PATH);
+            //If the save file does not exist
+            if (map == null)
+            {
+                data = new BidirectionalMap();
+                data.load(ORIGINAL_PATH);
+            }
+            else
+                data = (BidirectionalMap)map;
+
+            Object defHistory = loadObject(HISTORY_DEFINITION_PATH);
+            searchedDefinitions = defHistory == null ? new ArrayList<>() : (ArrayList)defHistory;
+
+            Object slangHistory = loadObject(HISTORY_SlANG_PATH);
+            searchedSlangWords = slangHistory == null ? new ArrayList<>() : (ArrayList)slangHistory;
         }
         catch (Exception e)
         {
-            searchedDefinitions = new ArrayList<>();
-            searchedSlangWords = new ArrayList<>();
+        }
+    }
+
+
+    private Object loadObject(String path)
+    {
+        try
+        {
+            ObjectInputStream stream = new ObjectInputStream(new FileInputStream(path));
+            return stream.readObject();
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+
+    private void saveObject(Serializable serializable, String path)
+    {
+        try
+        {
+            ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(path));
+            stream.writeObject(serializable);
+            stream.flush();
+            stream.close();
+        }
+        catch (Exception e)
+        {
+            new File(path).delete();
         }
     }
 

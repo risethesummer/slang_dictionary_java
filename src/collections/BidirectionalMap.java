@@ -9,16 +9,21 @@ import java.util.function.BooleanSupplier;
  * Date 12/9/2021 - 1:18 PM
  * Description: Bidirectional Map based on HashMap can retrieve keys from values
  */
-public class BidirectionalMap {
-
-    private TreeMap<String, String> slangMap;
-    private TreeMap<String, List<String>> definitionMap;
+public class BidirectionalMap implements Serializable {
 
     /**
-     * Create a new map with initial capacity to increase performance when the size increases
-     * @param initialCapacity the initial capacity
+     * Key->value: Slang word -> definitions
      */
-    public BidirectionalMap(int initialCapacity)
+    private final TreeMap<String, List<String>> slangMap;
+    /**
+     * Value->key: Definition -> slang words
+     */
+    private final TreeMap<String, List<String>> definitionMap;
+
+    /**
+     * Create a new map
+     */
+    public BidirectionalMap()
     {
         //Slang -> definition
         slangMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -58,10 +63,10 @@ public class BidirectionalMap {
     {
         try
         {
-            List<Map.Entry<String, String>> pairs = slangMap.entrySet().stream().toList();
+            List<Map.Entry<String, List<String>>> pairs = slangMap.entrySet().stream().toList();
             //Random an index of the generated array
             int randIndex = new Random().nextInt(pairs.size());
-            Map.Entry<String, String> choice = pairs.get(randIndex);
+            Map.Entry<String, List<String>> choice = pairs.get(randIndex);
             return new SlangWord(choice.getKey(), choice.getValue());
         } catch (Exception e)
         {
@@ -75,7 +80,7 @@ public class BidirectionalMap {
      */
     public Question randomSlangQuestion()
     {
-        List<Map.Entry<String, String>> pairs = slangMap.entrySet().stream().toList();
+        List<Map.Entry<String, List<String>>> pairs = slangMap.entrySet().stream().toList();
         List<String> answers = new ArrayList<>(Question.NUMBER_OF_ANSWER);
         Random random = new Random();
         //Get indexes of the slang words used
@@ -83,7 +88,11 @@ public class BidirectionalMap {
         //Choose the slang word for the user to guess
         int answerRandIndex = random.nextInt(randIndex.length);
         for (int i : randIndex)
-            answers.add(pairs.get(i).getValue());
+        {
+            List<String> curDefs = pairs.get(i).getValue();
+            int randDefinitionEachSlang = random.nextInt(curDefs.size());
+            answers.add(curDefs.get(randDefinitionEachSlang));
+        }
         return new Question(pairs.get(randIndex[answerRandIndex]).getKey(), answers, answerRandIndex);
     }
 
@@ -115,23 +124,12 @@ public class BidirectionalMap {
     /**
      * Add a new slang word to the map without checking duplicated words
      * @param slang the added slang word
-     * @param definition the definition of the word
+     * @param definition the definitions of the word
      */
-    public void addNotCheck(String slang, String definition)
+    public void addNotCheck(String slang, List<String> definition)
     {
         slangMap.put(slang, definition);
-        List<String> slangList = definitionMap.get(definition);
-        //If the opposite map has stored the definition
-        // -> update the slang list
-        if (slangList != null)
-            slangList.add(slang);
-            //Else create a new slang list for the definition
-        else
-        {
-            List<String> newSlangList = new ArrayList();
-            newSlangList.add(slang);
-            definitionMap.put(definition, newSlangList);
-        }
+        addDefinitions(definition, slang);
     }
 
 
@@ -141,21 +139,41 @@ public class BidirectionalMap {
      */
     public void update(SlangWord slangWord)
     {
-        String oldDefinition = slangMap.get(slangWord.word);
+        List<String> oldDefinition = slangMap.get(slangWord.word);
         //Add to replace the old definition
         slangMap.put(slangWord.word, slangWord.definition);
-        //Add new slang to the new definition
-        List<String> slangWords = definitionMap.get(slangWord.definition);
-        //If the slang words list does not exist
-        if (slangWords == null)
+        //Remove from the slang list of the definitions
+        deleteSlangWordFromDefinition(oldDefinition, slangWord.word);
+        //Replace for each definition
+        addDefinitions(slangWord.definition, slangWord.word);
+    }
+
+    private void addDefinitions(List<String> definitions, String slangWord)
+    {
+        for (String def : definitions)
         {
-            slangWords = new ArrayList<>();
-            definitionMap.put(slangWord.definition, slangWords);
+            //Add new slang to the new definition
+            List<String> slangWords = definitionMap.computeIfAbsent(def, k -> new ArrayList<>());
+            //If the slang words list does not exist
+            slangWords.add(slangWord);
         }
-        slangWords.add(slangWord.word);
-        Object m = definitionMap.get(oldDefinition);
-        //Remove the slang from the old definition
-        definitionMap.get(oldDefinition).remove(oldDefinition);
+    }
+
+    private void deleteSlangWordFromDefinition(List<String> definitions, String slangWord)
+    {
+        for (String def : definitions)
+        {
+            List<String> slangList = definitionMap.get(def);
+            if (slangList != null)
+            {
+                if (slangList.size() == 1)
+                    //If there is no slang words of the definition -> remove the slang list
+                    definitionMap.remove(def);
+                else
+                    //Remove the slang from the old definition
+                    slangList.remove(slangWord);
+            }
+        }
     }
 
     /**
@@ -164,115 +182,13 @@ public class BidirectionalMap {
      */
     public void delete(String slangWord)
     {
-        String definition = slangMap.get(slangWord);
-        //Remove from the slang list
+        List<String> definition = slangMap.get(slangWord);
+        //Remove from the slang map
         slangMap.remove(slangWord);
-        List<String> definitionList = definitionMap.get(definition);
-        //Just remains 1 word -> delete the definition list from the definition map
-        if (definitionList.size() == 1)
-            definitionMap.remove(definition);
-        else
-            //Remove the slang from the definition list
-            definitionList.remove(slangWord);
+        //Remove from the slang list of the definitions
+        deleteSlangWordFromDefinition(definition, slangWord);
     }
 
-    /**
-     * Load the data of the map by a structured file constructed by the system
-     * @param slangPath the path of the slang words file
-     * @param defPath the path of the definitions file
-     */
-    public void loadStructuredFile(String slangPath, String defPath)
-    {
-        try
-        {
-            BufferedReader reader = new BufferedReader(new FileReader(slangPath));
-            String line = null;
-            while ((line = reader.readLine()) != null)
-            {
-                try {
-                    String[] parts = line.split("`");
-                    slangMap.put(parts[0], parts[1]);
-                }
-                catch (Exception e)
-                {
-                    continue;
-                }
-            }
-            reader.close();
-
-            //Read slang words of a definition
-            //slangword`def 1`def 2`....`def n
-            reader = new BufferedReader(new FileReader(defPath));
-            while ((line = reader.readLine()) != null)
-            {
-                try
-                {
-                    String[] parts = line.split("`");
-                    List<String> words = new ArrayList<>(parts.length - 1);
-                    definitionMap.put(parts[0], words);
-                    for (int i = 1; i < parts.length; i++)
-                        words.add(parts[i]);
-                }
-                catch (Exception e)
-                {
-                    continue;
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Save the map to disk formatting the data to quickly load it later
-     * @param slangPath the path saving the slang words
-     * @param defPath the path saving the definitions
-     */
-    public void saveFile(String slangPath, String defPath)
-    {
-        try
-        {
-            BufferedWriter slangWriter = new BufferedWriter(new FileWriter(slangPath));
-            slangMap.forEach((slang, definition)->{
-                try
-                {
-                    slangWriter.write(slang + "`" + definition);
-                    slangWriter.newLine();
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
-            });
-            slangWriter.flush();
-            slangWriter.close();
-
-            //Save slang words of a definition
-            //definition'slang 1`....`slang n
-            var defWriter = new BufferedWriter(new FileWriter(defPath));
-            definitionMap.forEach((def, slang) -> {
-                try
-                {
-                    defWriter.write(def + "`");
-                    for (var s : slang)
-                        defWriter.write(s + "`");
-                    defWriter.newLine();
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
-            });
-            defWriter.flush();
-            defWriter.close();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * Clear the content of the map
@@ -301,11 +217,13 @@ public class BidirectionalMap {
                 try
                 {
                     String[] parts = line.split("`");
-                    addNotCheck(parts[0], parts[1]);
+                    String[] defs = parts[1].split("\\|");
+                    for (int i = 0; i < defs.length; i++)
+                        defs[i] = defs[i].trim();
+                    addNotCheck(parts[0], Arrays.stream(defs).toList());
                 }
                 catch (Exception e)
                 {
-                    continue;
                 }
             }
         }
@@ -319,7 +237,7 @@ public class BidirectionalMap {
      * Get the slang map (slang word -> definition)
      * @return the slang map
      */
-    public Map<String, String> getSlangMap() {
+    public Map<String, List<String>> getSlangMap() {
         return slangMap;
     }
 
@@ -329,25 +247,5 @@ public class BidirectionalMap {
      */
     public Map<String, List<String>> getDefinitionMap() {
         return definitionMap;
-    }
-
-    /**
-     * Get the formatted list of slang words of a definition slang1 /n slang2 /n slang3
-     * @param definition the definition used to get the slang words
-     * @return the list of slang words (string format)
-     */
-    public String getSlangWords(String definition)
-    {
-        try
-        {
-            String result = "";
-            for (String slang : definitionMap.get(definition))
-                result += slang + '\n';
-            return result;
-        }
-        catch (Exception e)
-        {
-            return "";
-        }
     }
 }

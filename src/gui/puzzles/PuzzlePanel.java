@@ -63,18 +63,10 @@ public class PuzzlePanel extends FunctionPanel {
             answerPanel.add(answerButtons[i]);
         }
         //Add end answering to each button
-        answerButtons[0].addActionListener(e -> {
-            endAnswering(0);
-        });
-        answerButtons[1].addActionListener(e -> {
-            endAnswering(1);
-        });
-        answerButtons[2].addActionListener(e -> {
-            endAnswering(2);
-        });
-        answerButtons[3].addActionListener(e -> {
-            endAnswering(3);
-        });
+        answerButtons[0].addActionListener(e -> endAnswering(0));
+        answerButtons[1].addActionListener(e -> endAnswering(1));
+        answerButtons[2].addActionListener(e -> endAnswering(2));
+        answerButtons[3].addActionListener(e -> endAnswering(3));
 
         mainPanel.add(loadButton, BorderLayout.PAGE_START);
         questionPanel.add(Box.createVerticalStrut(20));

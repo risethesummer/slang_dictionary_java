@@ -50,20 +50,13 @@ public record SyncDefinitionListener(JTextField slangField, JTextComponent oldDe
             {
                 //Get hints
                 String definition = onGetDefinition.apply(text);
-                if (definition == null)
-                    definition = "";
-                final String finalDefinition = definition;
                 //Set hints to the result field
-                SwingUtilities.invokeLater(() -> {
-                    oldDefinition.setText(finalDefinition);
-                });
+                SwingUtilities.invokeLater(() -> oldDefinition.setText(definition));
             }
             else
             {
                 //Set null to the result field if the user inputs nothing
-                SwingUtilities.invokeLater(() -> {
-                    oldDefinition.setText(null);
-                });
+                SwingUtilities.invokeLater(() -> oldDefinition.setText(null));
             }
         }
         catch (Exception e)

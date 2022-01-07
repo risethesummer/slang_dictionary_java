@@ -14,7 +14,12 @@ public class TextWithLabel extends JPanel {
     /**
      * The text field of the panel
      */
-    private JTextField textField;
+    private final JTextField textField;
+
+    /**
+     * The panel containing text fields
+     */
+    protected final JPanel mainPanel;
 
     /**
      * Construct a panel with the content displayed on the label
@@ -28,8 +33,11 @@ public class TextWithLabel extends JPanel {
         label.setAlignmentX(LEFT_ALIGNMENT);
         add(label, BorderLayout.PAGE_START);
 
+        mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.LINE_AXIS));
         textField = new JTextField();
-        add(textField, BorderLayout.CENTER);
+        mainPanel.add(textField);
+        add(mainPanel, BorderLayout.CENTER);
 
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
     }
